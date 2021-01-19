@@ -1,0 +1,436 @@
+---
+# Every test file has one or more tests...
+test_name: restful_api_testing
+# ...and each test has one or more stages (e.g. an HTTP request)
+includes:
+  - !include includes.yaml
+stages:
+  - name: username_create successfully created user
+    # already created
+    request:
+      url: "{host:s}/user"
+      method: POST
+      params:
+        email: abc123@ucla.edu
+        password: fadofaj0j9j
+#    response:
+#      status_code:
+#        - 200
+
+  - name: username_create bad input parameter
+
+    # Define the request to be made...
+    request:
+      url: "{host:s}/user"
+      method: POST
+      params:
+        password: fadofaj0j9j
+    response:
+      status_code:
+        - 400
+
+  - name: username_create conflict username
+    request:
+      url: "{host:s}/user"
+      method: POST
+      params:
+        email: abc123@ucla.edu
+        password: fadofaj0j9j
+    response:
+      status_code:
+        - 409
+
+  - name: user login successfully login
+    request:
+      url: "{host:s}/session"
+      method: POST
+      params:
+        email: abc123@ucla.edu
+        password: fadofaj0j9j
+    response:
+      status_code:
+        - 200
+      save:
+        body:
+          test_login_token: user_token
+          test_user_id: user_id
+          
+
+  - name: user login bad input parameter
+    request:
+      url: "{host:s}/session"
+      method: POST
+      params:
+        email: abc123@ucla.edu
+    response:
+      status_code:
+        - 400
+
+  - name: user login bad credential
+    request:
+      url: "{host:s}/session"
+      method: POST
+      params:
+        email: abc123@ucla.edu
+        password: wrong
+    response:
+      status_code:
+        - 401
+
+  - name:  upload new data successfully
+    request:
+      url: "{host:s}/data"
+      method: POST
+      params: 
+        name: "test_data_upload"
+        session_token: "{test_login_token:s}"
+    response:
+      status_code:
+        - 200
+      save:
+        body:
+          test_data_id: data_id
+
+  - name:  upload new data bad input parameter
+    request:
+      url: "{host:s}/data"
+      method: POST
+      params: 
+        session_token: "{test_login_token:s}"
+    response:
+      status_code:
+        - 400
+        
+  - name:  upload new data bad token
+    request:
+      url: "{host:s}/data"
+      method: POST
+      params: 
+        name: "test_data_bt"
+        session_token: "12345"
+    response:
+      status_code:
+        - 401
+
+  - name:  successfully renamed the data
+    request:
+      url: "{host:s}/data"
+      method: PUT
+      params: 
+        name: "rename"
+        session_token: "{test_login_token:s}"
+        data_id: "{test_data_id:d}"
+    response:
+      status_code:
+        - 200
+
+  - name:  unsuccessfully renamed the data bad input parameter
+    request:
+      url: "{host:s}/data"
+      method: PUT
+      params: 
+        name: "rename"
+        session_token: "{test_login_token:s}"
+    response:
+      status_code:
+        - 400
+
+  - name:  unsuccessfully renamed the data bad token
+    request:
+      url: "{host:s}/data"
+      method: PUT
+      params: 
+        name: "rename"
+        session_token: "3180"
+        data_id: "{test_data_id:d}"
+    response:
+      status_code:
+        - 401
+
+  - name:  successfully list data
+    request:
+      url: "{host:s}/data"
+      method: GET
+      params: 
+        session_token: "{test_login_token:s}"
+    response:
+      status_code:
+        - 200
+
+  - name:  unsuccessfully list data bad input parameter
+    request:
+      url: "{host:s}/data"
+      method: GET
+      params: 
+        sessionToken: "{test_login_token:s}"
+    response:
+      status_code:
+        - 400
+
+  - name: successfully list models
+    request:
+      url: "{host:s}/models"
+      method: GET
+      params: 
+        session_token: "{test_login_token:s}"
+    response:
+      status_code:
+        - 200    
+      save:
+        body:
+          test_model_id: 0.id
+
+  - name: unsuccessfully list models bad input parameter
+    request:
+      url: "{host:s}/models"
+      method: GET
+      params: 
+        sessiontoken: "{test_login_token:s}"
+    response:
+      status_code:
+        - 400
+ 
+  - name: successfully updated the model
+    request:
+      url: "{host:s}/models"
+      method: PUT
+      params:
+        model_id: "{test_model_id:d}"
+        session_token: "{test_login_token:s}"
+        shared: "false"
+        name: "newnewnew"
+    response:
+      status_code:
+        - 200
+    
+  - name: unsuccessfully updated the model bad input parameter
+    request:
+      url: "{host:s}/models"
+      method: PUT
+      params:
+        session_token: "{test_login_token:s}"
+        shared: "false"
+        name: "newnewnew"
+    response:
+      status_code:
+        - 400 
+        
+  - name: unsuccessfully updated the model bad token
+    request:
+      url: "{host:s}/models"
+      method: PUT
+      params:
+        model_id: "{test_model_id:d}"
+        session_token: "38324"
+        shared: "false"
+        name: "newnewnew"
+    response:
+      status_code:
+        - 401
+           
+  - name: check updated model
+    request:
+      url: "{host:s}/models"
+      method: GET
+      params: 
+        session_token: "{test_login_token:s}"
+    response:
+      status_code:
+        - 200    
+      verify_response_with:
+        function: testing_utils:message_updated_model
+
+  #cant't creat, can't delete
+
+  - name: successfully created task
+    request:
+      url: "{host:s}/task"
+      method: POST
+      params: 
+        session_token: "{test_login_token:s}"
+        type: "training"
+        data: "{test_data_id:d}"
+        model: "{test_model_id:d}"
+    response:
+      status_code:
+        - 200    
+
+  - name: unsuccessfully created task bad input parameter
+    request:
+      url: "{host:s}/task"
+      method: POST
+      params: 
+        session_token: "{test_login_token:s}"
+        type: "sleeping"
+        data: "{test_data_id:d}"
+        model: "{test_model_id:d}"
+    response:
+      status_code:
+        - 400    
+
+  - name: successfully listed task
+    request:
+      url: "{host:s}/task"
+      method: GET
+      params: 
+        session_token: "{test_login_token:s}"
+    response:
+      status_code:
+        - 200    
+      save:
+        $ext:
+          function: testing_utils:message_created_task
+          extra_kwargs:
+              user_id: "{test_user_id:d}"
+              data_id: "{test_data_id:d}"
+              model_id: "{test_model_id:d}"
+
+  - name: unsuccessfully listed task bad input parameter
+    request:
+      url: "{host:s}/task"
+      method: GET
+      params: 
+        sessionToken: "{test_login_token:s}"
+    response:
+      status_code:
+        - 400    
+
+  - name: successfully stopped the task
+    request:
+      url: "{host:s}/task"
+      method: PUT
+      params: 
+        session_token: "{test_login_token:s}"
+        task_id: "{test_task_id:d}"
+    response:
+      status_code:
+        - 200    
+
+  - name: unsuccessfully stopped the task bad input parameter
+    request:
+      url: "{host:s}/task"
+      method: PUT
+      params: 
+        session_token: "{test_login_token:s}"
+        taskID: "{test_task_id:d}"
+    response:
+      status_code:
+        - 400    
+
+  - name: unsuccessfully stopped the task bad token
+    request:
+      url: "{host:s}/task"
+      method: PUT
+      params: 
+        session_token: "14159"
+        task_id: "{test_task_id:d}"
+    response:
+      status_code:
+        - 401  
+        
+  # unsuccessfully stopped the task task is not stoppable
+
+  - name: successfully removed the task
+    request:
+      url: "{host:s}/task"
+      method: DELETE
+      params: 
+        session_token: "{test_login_token:s}"
+        task_id: "{test_task_id:d}"
+    response:
+      status_code:
+        - 200
+
+  - name: unsuccessfully removed the task bad input parameter
+    request:
+      url: "{host:s}/task"
+      method: DELETE
+      params: 
+        task_id: "{test_task_id:d}"
+    response:
+      status_code:
+        - 400
+  
+  - name: unsuccessfully removed the task bad token
+    request:
+      url: "{host:s}/task"
+      method: DELETE
+      params: 
+        session_token: "678"
+        task_id: "{test_task_id:d}"
+    response:
+      status_code:
+        - 401
+
+  - name: check removed task
+    request:
+      url: "{host:s}/task"
+      method: GET
+      params: 
+        session_token: "{test_login_token:s}"
+    response:
+      status_code:
+        - 200    
+      verify_response_with:
+          function: testing_utils:message_deleted_task
+          extra_kwargs:
+              task_id: "{test_task_id:d}"
+  
+  - name:  successfully removed the data
+    request:
+      url: "{host:s}/data"
+      method: DELETE
+      params: 
+        session_token: "{test_login_token:s}"
+        data_id: "{test_data_id:d}"
+    response:
+      status_code:
+        - 200
+
+  - name:  unsuccessfully removed the data bad input parameter
+    request:
+      url: "{host:s}/data"
+      method: DELETE
+      params: 
+        data_id: "{test_data_id:d}"
+    response:
+      status_code:
+        - 400
+
+  - name:  unsuccessfully removed the data bad token
+    request:
+      url: "{host:s}/data"
+      method: DELETE
+      params: 
+        session_token: "3180"
+        data_id: "{test_data_id:d}"
+    response:
+      status_code:
+        - 401
+
+  - name: user log out successfully
+    request:
+      url: "{host:s}/session"
+      method: DELETE
+      params: 
+        session_token: "{test_login_token:s}"
+    response:
+      status_code: 200
+
+  - name: user log out bad input parameter
+    request:
+      url: "{host:s}/session"
+      method: DELETE
+      params: 
+        abc: "{test_login_token:s}"
+    response:
+      status_code: 400
+
+  - name: user log out bad token
+    request:
+      url: "{host:s}/session"
+      method: DELETE
+      params: 
+        session_token: "12345"
+    response:
+      status_code: 401

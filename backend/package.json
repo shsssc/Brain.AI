@@ -1,0 +1,29 @@
+{
+  "name": "brain-ai",
+  "version": "1.0.0-oas3",
+  "description": "API for Brain.ai",
+  "main": "index.js",
+  "scripts": {
+    "prestart": "npm install",
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "swagger"
+  ],
+  "license": "Unlicense",
+  "private": true,
+  "dependencies": {
+    "@google-cloud/storage": "^4.3.1",
+    "connect": "^3.2.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "js-yaml": "^3.3.0",
+    "mysql2": "^2.1.0",
+    "oas3-tools": "^1.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "jest": "^25.1.0"
+  }
+}

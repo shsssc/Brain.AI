@@ -1,0 +1,542 @@
+openapi: 3.0.0
+info:
+  description: API for Brain.ai
+  version: "1.0.0-oas3"
+  title: Brain.AI
+  contact:
+    email: songsichen@g.ucla.edu
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: User
+    description: user & session
+  - name: Data
+    description: Manage Data
+  - name: Model
+    description: Manage Models
+  - name: Tasks
+    description: Manage Tasks
+
+paths:
+  /user:
+    post:
+      tags:
+        - User
+      summary: createUser
+      operationId: createUser
+      description: |
+        new user sign up
+      parameters:
+        - in: query
+          name: email
+          required: true
+          description: password of user
+          schema:
+            type: string
+            example: abc@xyz.com
+        - in: query
+          name: password
+          required: true
+          description: password of user
+          schema:
+            type: string
+            example: mysuperpassword!#@
+      responses:
+        '200':
+          description: successfully created user
+        '400':
+          description: bad input parameter
+        '409':
+          description: conflict username
+  /session:
+    post:
+      tags:
+        - User
+      summary: user login
+      operationId: login
+      description: |
+        new user log in
+      parameters:
+        - in: query
+          name: email
+          required: true
+          description: password of user
+          schema:
+            type: string
+            example: abc@xyz.com
+        - in: query
+          name: password
+          required: true
+          description: password of user
+          schema:
+            type: string
+            example: mysuperpassword!#@
+      responses:
+        '200':
+          description: successfully login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_token:
+                    type: string
+                    example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+                    description: the token that authorize the user
+        '400':
+          description: bad input parameter
+        '401':
+          description: bad credential
+    delete:
+      tags:
+        - User
+      summary: user log out
+      operationId: logOut
+      description: |
+        authorized user log out
+      parameters:
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully log out
+        '400':
+          description: bad input parameter
+        '401':
+          description: bad token
+  /data:
+    get:
+      tags:
+        - Data
+      summary: list all data the user owns
+      operationId: getData
+      description: |
+        list all data the user owns
+      parameters:
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully list data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    data_id:
+                      type: integer
+                      example: 1
+                      description: the id of data
+                    data_name:
+                      type: string
+                      example: T2_FLAIR
+                      description: the user-defined name of data
+                    preview:
+                      type: string
+                      example: http://aaa.com/image.jpg
+                      description: the preview image of dataset
+                    data_type:
+                      type: string
+                      enum:
+                        - training
+                        - prediction
+                      example: training
+                  
+        '400':
+          description: bad input parameter
+    delete:
+      tags:
+        - Data
+      summary: remove data the user uploaded
+      operationId: deleteData
+      description: |
+        remove data the user uploaded
+      parameters:
+        - in: query
+          name: data_id
+          required: true
+          description: data id of data to delete
+          schema:
+            type: integer
+            example: 123
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully removed the data
+        '400':
+          description: bad input parameter
+        '401':
+          description: bad token
+    post:
+      tags:
+        - Data
+      summary: upload new data
+      operationId: uploadData
+      description: |
+        upload data
+      parameters:
+        - in: query
+          name: name
+          required: true
+          description: name of the dataset
+          schema:
+            type: string
+            example: IMAGE_SET_1
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully uploaded the data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data_id:
+                    type: integer
+                    example: 3
+                    description: the id of the uploaded data
+                  upload_url:
+                    type: string
+                    example: http://upload_here.com
+                    description: the url for data upload
+        '400':
+          description: bad input parameter
+        '401':
+          description: bad token
+    put:
+      tags:
+        - Data
+      summary: rename data
+      operationId: modifyData
+      description: |
+        rename the uploaded data 
+      parameters:
+        - in: query
+          name: name
+          required: true
+          description: name of the dataset
+          schema:
+            type: string
+            example: IMAGE_SET_1
+        - in: query
+          name: data_id
+          required: true
+          description: data id of data to rename
+          schema:
+            type: integer
+            example: 123
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully renamed the data
+        '400':
+          description: bad input parameter
+        '401':
+          description: bad token
+          
+  /models:
+    get:
+      tags:
+        - Model
+      summary: list all Models the user can see
+      operationId: getModel
+      description: |
+        list all Models the user owns or is shared
+      parameters:
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully list models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    model_id:
+                      type: integer
+                      example: 1
+                      description: the id of data
+                    model_name:
+                      type: string
+                      example: T2_FLAIR
+                      description: the user-defined name of data
+                    preview:
+                      type: string
+                      example: http://aaa.com/image.jpg
+                      description: the preview image of dataset
+                    shared:
+                      type: boolean
+                      example: 0
+                      description: whether the model is publically avaliable
+        '400':
+          description: bad input parameter
+    delete:
+      tags:
+        - Model
+      summary: remove model the user owns
+      operationId: deleteModel
+      description: |
+        remove model the user created
+      parameters:
+        - in: query
+          name: model_id
+          required: true
+          description: id of model to delete
+          schema:
+            type: integer
+            example: 123
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully removed the model
+        '400':
+          description: bad input parameter
+        '401':
+          description: bad token
+    put:
+      tags:
+        - Model
+      summary: change model the user owns
+      operationId: modifyModel
+      description: |
+        modify model the user created
+      parameters:
+        - in: query
+          name: model_id
+          required: true
+          description: id of model to delete
+          schema:
+            type: integer
+            example: 123
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+        - in: query
+          name: name
+          required: false
+          description: new name of model
+          schema:
+            type: string
+            example: best model ever
+        - in: query
+          name: shared
+          required: false
+          description: new share status of model
+          schema:
+            type: boolean
+            example: true
+      responses:
+        '200':
+          description: successfully updated the model
+        '400':
+          description: bad input parameter
+        '401':
+          description: bad token
+  /task:
+    get:
+      tags:
+        - Tasks
+      summary: list all tasks the user owns
+      operationId: getTask
+      description: |
+        list all tasks the user owns
+      parameters:
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully listed task
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    task_id:
+                      type: integer
+                      example: 1
+                      description: the id of task
+                    task_status:
+                      type: string
+                      example: pending
+                      enum:
+                        - pending
+                        - inProgress
+                        - stopped
+                        - success
+                        - error
+                      description: the status of the task
+                    data:
+                      type: integer
+                      example: 3
+                      description: the id of the data associated with the task
+                    task_type:
+                      description: the type of the task
+                      type: string
+                      enum:
+                        - training
+                        - prediction
+                      example: training
+        '400':
+          description: bad input parameter
+    post:
+      tags:
+        - Tasks
+      summary: create new task
+      operationId: createTask
+      description: |
+        generate new task for training/prediction/preview
+      parameters:
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+        - in: query
+          name: type
+          description: the type of the task
+          schema: 
+            type: string
+            enum:
+              - training
+              - prediction
+              - preview
+            example: training
+        - in: query
+          name: data
+          required: true
+          description: data id for the task
+          schema:
+            type: integer
+            example: 33
+        - in: query
+          name: model
+          required: false
+          description: model id for the prediction task
+          schema:
+            type: integer
+            example: 5
+      responses:
+        '200':
+          description: successfully created task
+        '400':
+          description: bad input parameter
+    delete:
+      tags:
+        - Tasks
+      summary: remove task from tasklist
+      operationId: deleteTask
+      description: |
+        remove task the user created. The task must **not** be running.
+      parameters:
+        - in: query
+          name: task_id
+          required: true
+          description: id of task to delete
+          schema:
+            type: integer
+            example: 29
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully removed the task
+        '400':
+          description: bad input parameter
+        '401':
+          description: bad token
+    put:
+      tags:
+        - Tasks
+      summary: stop a task that is pending or running
+      operationId: stopTask
+      description: |
+        stop task the user created. The task must be pending or running.
+      parameters:
+        - in: query
+          name: task_id
+          required: true
+          description: id of task to stop
+          schema:
+            type: integer
+            example: 29
+        - in: query
+          name: session_token
+          required: true
+          description: session token of a user session
+          schema:
+            type: string
+            example: 22d40d3978dd7945bbfcc0bc32a078e2129a253a97cbb04cbb71bc8c506aa9c5
+      responses:
+        '200':
+          description: successfully stopped the task
+        '400':
+          description: bad input parameter
+        '401':
+          description: bad token
+        '403':
+          description: task is not stoppable
+servers:
+  - url: 'https://virtserver.swaggerhub.com/shsssc/brain.ai/1.0.0'
